@@ -21,23 +21,8 @@ size_t getATAPIs(std::PID client) {
 	return ret;
 }
 
-static std::unordered_map<std::PID, char*> shared;
-static std::mutex sharedLock;
-
-size_t connect(std::PID client, std::SMID smid) {
-	// Already connected?
-	if(!std::smRequest(client, smid))
-		return false;
-
-	char* ptr = (char*)std::smMap(smid);
-	if(!ptr)
-		return false;
-
-	// TODO: unmap previous, release SMID
-	sharedLock.acquire();
-	shared[client] = ptr;
-	sharedLock.release();
-	return true;
+bool connect(std::PID client, std::SMID smid) {
+	return std::sm::connect(client, smid);
 }
 
 size_t readATAPI(std::PID client, size_t id, size_t start, size_t sectors) {
@@ -50,14 +35,9 @@ size_t readATAPI(std::PID client, size_t id, size_t start, size_t sectors) {
 	DevicePort& dp = listedATAPIs[id];
 	listedATAPIsLock.release();
 
-	sharedLock.acquire();
-	if(shared.find(client) == shared.end()) {
-		sharedLock.release();
+	uint8_t* buffer = std::sm::get(client);
+	if(!buffer)
 		return 0;
-	}
-
-	uint8_t* buffer = (uint8_t*)(shared[client]);
-	sharedLock.release();
 
 	return dp.read(buffer, start, sectors);
 }
