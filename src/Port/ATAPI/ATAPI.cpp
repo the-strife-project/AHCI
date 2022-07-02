@@ -1,4 +1,7 @@
 #include <common.hpp>
+#include <mutex>
+
+static std::mutex lock;
 
 // Send ATAPI packets
 bool Port::sendATAPI(ATAPI::CommandPacket* cmd, uint8_t* data, size_t len) {
@@ -12,7 +15,7 @@ bool Port::sendATAPI(ATAPI::CommandPacket* cmd, uint8_t* data, size_t len) {
 		return false;
 	}
 
-	// Lock here! TODO
+	lock.acquire();
 
 	// Get a command slot and prepare it
 	auto slot = getSlot();
@@ -45,9 +48,12 @@ bool Port::sendATAPI(ATAPI::CommandPacket* cmd, uint8_t* data, size_t len) {
 	prd->irqOnCompletion = 0; // Shhh
 
 	// Go!
-	if(!execute(slot))
+	if(!execute(slot)) {
+		lock.release();
 		return false;
+	}
 
 	// All good
+	lock.release();
 	return true;
 }

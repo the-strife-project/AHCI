@@ -1,4 +1,5 @@
 #include <common.hpp>
+#include <mutex>
 
 void Port::stop() {
 	// Stop
@@ -43,12 +44,19 @@ void Port::waitReady() {
 		asm volatile("pause");
 }
 
+static std::mutex lock;
+
 uint8_t Port::getSlot() {
-	// Semaphore here! TODO
+	lock.acquire();
 	uint32_t slots = port->sact | port->ci;
-	for(size_t i=0; i<32; ++i)
-		if((slots & 1) == 0)
+	for(size_t i=0; i<32; ++i) {
+		if((slots & 1) == 0) {
+			lock.release();
 			return i;
+		}
+	}
+
+	lock.release();
 	return 0xFF;
 }
 
