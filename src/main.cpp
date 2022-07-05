@@ -10,6 +10,11 @@
 std::unordered_set<DevicePort> atapis;
 
 extern "C" void _start() {
+	if(!std::allowPhys()) {
+		std::printf("[AHCI] Could not allow physical memory access.\n");
+		std::exit(5);
+	}
+
 	// Find devices and initialize them
 	probe();
 	for(auto& x : atapis)
