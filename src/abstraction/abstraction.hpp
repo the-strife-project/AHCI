@@ -18,7 +18,7 @@ public:
 	{}
 
 	inline std::Hash hash() const { return (device << 5) | portid; }
-	inline bool operator==(const DevicePort& other) {
+	inline bool operator==(const DevicePort& other) const {
 		return (device == other.device) && (portid == other.portid);
 	}
 
@@ -26,6 +26,10 @@ public:
 	void init() { port.init(); }
 
 	bool read(uint8_t* data, size_t lba, size_t sectors);
+
+	inline bool operator<(const DevicePort& other) const {
+		return hash() < other.hash();
+	}
 };
 
 namespace std {
