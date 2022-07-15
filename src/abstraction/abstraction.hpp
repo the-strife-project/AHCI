@@ -30,6 +30,8 @@ public:
 	inline bool operator<(const DevicePort& other) const {
 		return hash() < other.hash();
 	}
+
+	inline size_t getSectorSize() const { return ATAPI_SECTOR_SIZE; }
 };
 
 namespace std {

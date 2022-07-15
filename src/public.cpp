@@ -21,13 +21,9 @@ size_t getATAPIs(std::PID client) {
 	return ret;
 }
 
-bool connect(std::PID client, std::SMID smid) {
-	return std::sm::connect(client, smid);
-}
-
-size_t readATAPI(std::PID client, size_t id, size_t start, size_t sectors) {
+size_t readATAPI(std::PID client, std::SMID smid, size_t id, size_t lba) {
 	listedATAPIsLock.acquire();
-	if(id >= listedATAPIs.size() ) {
+	if(id >= listedATAPIs.size()) {
 		listedATAPIsLock.release();
 		return false;
 	}
@@ -35,15 +31,19 @@ size_t readATAPI(std::PID client, size_t id, size_t start, size_t sectors) {
 	DevicePort& dp = listedATAPIs[id];
 	listedATAPIsLock.release();
 
-	uint8_t* buffer = std::sm::get(client);
-	if(!buffer)
+	auto link = std::sm::link(client, smid);
+	size_t npages = link.s;
+	if(!npages)
 		return 0;
 
-	return dp.read(buffer, start, sectors);
+	size_t sectors = npages * PAGE_SIZE / dp.getSectorSize();
+
+	size_t ret = dp.read(link.f, lba, sectors);
+	std::sm::unlink(smid);
+	return ret;
 }
 
 void exportProcedures() {
 	std::exportProcedure((void*)getATAPIs, 0);
-	std::exportProcedure((void*)connect, 1);
 	std::exportProcedure((void*)readATAPI, 3);
 }

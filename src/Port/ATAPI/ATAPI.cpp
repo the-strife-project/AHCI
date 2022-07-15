@@ -5,12 +5,7 @@ static std::mutex lock;
 
 // Send ATAPI packets
 bool Port::sendATAPI(ATAPI::CommandPacket* cmd, uint8_t* data, size_t len) {
-	// This is an implementation limit I choose to have
-	// Doesn't make things simpler, but it's lowkey necessary for shared mem
-	if(len > PAGE_SIZE) {
-		std::printf("[AHCI] Transfer too big\n");
-		return false;
-	} else if(((uint64_t)data) & 0xFFF) {
+	if(((uint64_t)data) & 0xFFF) {
 		std::printf("[AHCI] Buffer is not page aligned!\n");
 		return false;
 	}
