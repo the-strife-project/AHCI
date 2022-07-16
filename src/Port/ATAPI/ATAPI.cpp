@@ -5,7 +5,7 @@ static std::mutex lock;
 
 // Send ATAPI packets
 bool Port::sendATAPI(ATAPI::CommandPacket* cmd, uint8_t* data, size_t len) {
-	if(((uint64_t)data) & 0xFFF) {
+	if(PAGEOFF((uint64_t)data)) {
 		std::printf("[AHCI] Buffer is not page aligned!\n");
 		return false;
 	}
