@@ -21,7 +21,7 @@ size_t getATAPIs(std::PID client) {
 	return ret;
 }
 
-size_t readATAPI(std::PID client, std::SMID smid, size_t id, size_t lba) {
+size_t readATAPI(std::PID client, std::SMID smid, size_t id, size_t lba, size_t nsects) {
 	listedATAPIsLock.acquire();
 	if(id >= listedATAPIs.size()) {
 		listedATAPIsLock.release();
@@ -37,6 +37,7 @@ size_t readATAPI(std::PID client, std::SMID smid, size_t id, size_t lba) {
 		return 0;
 
 	size_t sectors = npages * PAGE_SIZE / dp.getSectorSize();
+	sectors = std::min(sectors, nsects);
 
 	size_t ret = dp.read(link.f, lba, sectors);
 	std::sm::unlink(smid);
@@ -45,5 +46,5 @@ size_t readATAPI(std::PID client, std::SMID smid, size_t id, size_t lba) {
 
 void exportProcedures() {
 	std::exportProcedure((void*)getATAPIs, 0);
-	std::exportProcedure((void*)readATAPI, 3);
+	std::exportProcedure((void*)readATAPI, 4);
 }
