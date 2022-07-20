@@ -3,13 +3,15 @@
 #include <unordered_map>
 #include <shared_memory>
 #include <mutex>
+#include <registry>
 
 // This is all very static. Vector of DevicePorts, so each one has an index.
 static std::vector<DevicePort> listedATAPIs;
 static std::mutex listedATAPIsLock;
 
 size_t getATAPIs(std::PID client) {
-	IGNORE(client);
+	if(!std::registry::has(client, "AHCI_LIST"))
+		return 0;
 
 	listedATAPIsLock.acquire();
 	if(!listedATAPIs.size())
@@ -22,10 +24,13 @@ size_t getATAPIs(std::PID client) {
 }
 
 size_t readATAPI(std::PID client, std::SMID smid, size_t id, size_t lba, size_t nsects) {
+	if(!std::registry::has(client, "AHCI_ATAPI_READ"))
+		return 0;
+
 	listedATAPIsLock.acquire();
 	if(id >= listedATAPIs.size()) {
 		listedATAPIsLock.release();
-		return false;
+		return 0;
 	}
 
 	DevicePort& dp = listedATAPIs[id];
