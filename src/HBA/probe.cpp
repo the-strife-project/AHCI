@@ -45,10 +45,8 @@ static void initHBA(uint32_t device) {
 	// Clear pending IRQs
 	regs->ghc.is = ~0u;
 
-	// How many ports and command slots?
-	size_t ports = regs->ghc.cap.nPorts;
-
-	for(size_t i=0; i<ports; ++i) {
+	// Probe all ports
+	for(size_t i=0; i<MAX_PORTS; ++i) {
 		if(!(regs->ghc.pi & (1 << i)))
 			continue; // Port not implemented
 

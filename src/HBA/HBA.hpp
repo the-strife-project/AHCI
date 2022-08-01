@@ -13,6 +13,8 @@ namespace HBA {
 		uint32_t longAddressing : 1;
 	} __attribute__((packed));
 
+	#define MAX_PORTS 32
+
 	// Meme name, I know. Generic Host Control's Global HBA Control
 	struct GHCGHC {
 		uint32_t reset : 1;
